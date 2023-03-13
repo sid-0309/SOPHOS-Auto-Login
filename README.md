@@ -13,7 +13,7 @@ python -m pip install selenium webdriver_manager win10toast
 4. The webdrivers should be added to PATH.
 
 ### Limitations
-Currently works with only if Warp is present ( I use Warp so didn't bother making it optional )
+Currently works only if Warp is present ( I use Warp so didn't bother making it optional )
 
 ### Planned Features
 System tray icon to enable manual termination of process.
