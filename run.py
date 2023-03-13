@@ -13,7 +13,6 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from json import dump, load
-from keyboard import is_pressed
 import sys
 import getopt
 from win10toast import ToastNotifier
@@ -25,7 +24,6 @@ urlalt = "http://www.cloudflareportal.com/test"
 browser = 0
 notifier = ToastNotifier()
 icon_path = f"{userdirectory}\\Code\\auto-login\\padlock.ico"
-logfile = open(f"{userdirectory}\\Code\\auto-login\\logfile.txt","a")
 logtext = ""
 
 def driverSetup():
@@ -41,31 +39,31 @@ def driverSetup():
             run_options.add_argument("--headless")
             if log_level == 1:
                 print("Added runtime argument 'headless' for Chrome webdriver")
-                logtext += "Added runtime argument 'headless' for Chrome webdriver"
+                logtext += "Added runtime argument 'headless' for Chrome webdriver\n"
             run_options.add_argument("--window-size=1920,1080")
             if log_level == 1:
                 print("Added runtime argument 'window-size' for Chrome webdriver")
-                logtext += "Added runtime argument 'window-size' for Chrome webdriver"
+                logtext += "Added runtime argument 'window-size' for Chrome webdriver\n"
         elif userData['browser'] == 'edge':
             browser = 1
             run_options = EdgeOptions()
             run_options.add_argument("--headless")
             if log_level == 1:
                 print("Added runtime argument 'headless' for Edge webdriver")
-                logtext += "Added runtime argument 'headless' for Edge webdriver"
+                logtext += "Added runtime argument 'headless' for Edge webdriver\n"
             run_options.add_argument("--window-size=1920,1080")
             if log_level == 1:
                 print("Added runtime argument 'window-size' for Edge webdriver")
-                logtext += "Added runtime argument 'window-size' for Edge webdriver"
+                logtext += "Added runtime argument 'window-size' for Edge webdriver\n"
         elif userData['browser'] == 'firefox':
             browser = 2
             run_options = FirefoxOptions()
             run_options.add_argument("--headless")
             if log_level == 1:print("Added runtime argument 'headless' for Firefox webdriver")
-            logtext += "Added runtime argument 'headless' for Firefox webdriver"
+            logtext += "Added runtime argument 'headless' for Firefox webdriver\n"
             run_options.add_argument("--window-size=1920,1080")
             if log_level == 1:print("Added runtime argument 'window-size' for Firefox webdriver")
-            logtext += "Added runtime argument 'window-size' for Firefox webdriver"
+            logtext += "Added runtime argument 'window-size' for Firefox webdriver\n"
             
     except Exception:
         setup()
@@ -93,13 +91,13 @@ def ping(repeat):
         return 1
     if log_level == 1:
         print("Attempting to ping 'www.google.com'")
-        logtext += "Attempting to ping 'www.google.com'"
+        logtext += "Attempting to ping 'www.google.com'\n"
     pingProcess = subprocess.run(['ping','www.google.com',],stdout=PIPE)
     re = pingProcess.stdout.decode('utf-8')
     if("Sent" not in re):
         if log_level == 1:
             print("Server address could not be resolved.")
-            logtext += "Server address could not be resolved."
+            logtext += "Server address could not be resolved.\n"
         return 1
     sent = re[re.find("Sent")+7]
     received = re[re.find("Received")+11]
@@ -111,7 +109,7 @@ def ping(repeat):
         
         if log_level == 1:
             print("Ping successful. Login not required.")
-            logtext+="Ping successful. Login not required."
+            logtext+="Ping successful. Login not required.\n"
         else: pass
         return 0
     
@@ -123,20 +121,20 @@ def WarpDisconnect():
     if("Connected" in checkerprocess.stdout.decode("utf-8")):
         if log_level == 1:
             print("Disconnecting from CloudFlare Warp")
-            logtext += "Disconnecting from CloudFlare Warp"
+            logtext += "Disconnecting from CloudFlare Warp\n"
         else:pass
         process = subprocess.run(['warp-cli','disconnect'],stdout=PIPE)
         if("Success" in process.stdout.decode('utf-8')):
             if log_level == 1:
                 print("Disconnected")
-                logtext += "Disconnected"
+                logtext += "Disconnected\n"
             else: pass
             notifier.show_toast("Auto Login","Disconnected from Warp",icon_path=icon_path,duration=5)
             return 0
         else:
             if log_level == 1:
                 print("Could not disconnect from Warp.")
-                logtext += "Could not disconnect from Warp."
+                logtext += "Could not disconnect from Warp.\n"
             return 1
     else:
         return 0
@@ -148,20 +146,21 @@ def WarpReconnect():
     retry = 1
     checkerprocess = subprocess.run(['warp-cli','status'],stdout=PIPE)
     if("Connected" in checkerprocess.stdout.decode('utf-8')):
-        if log_level == 1:print("Warp is already connected.")
-        logtext += "Warp is already connected."
+        if log_level == 1:
+            print("Warp is already connected.")
+            logtext += "Warp is already connected.\n"
         status = 1
     else:
         if log_level == 1:
             print("Attempting to establish connection to CouldFlare servers.")
-            logtext += "Attempting to establish connection to CouldFlare servers."
+            logtext += "Attempting to establish connection to CouldFlare servers.\n"
         status = 0
     
     while status == 0:
         if(retry == 5):
             if log_level == 1:
                 print("Retry 5/5 failed. Unable to establish connection to CloudFlare servers.")
-                logtext += "Retry 5/5 failed. Unable to establish connection to CloudFlare servers."
+                logtext += "Retry 5/5 failed. Unable to establish connection to CloudFlare servers.\n"
             else :pass
             return 1
         process = subprocess.run(['warp-cli','connect'],stdout=PIPE)
@@ -174,12 +173,13 @@ def WarpReconnect():
             status = 1
             if log_level == 1:
                 print("Connection established")
+                logtext += "Connection established\n"
             notifier.show_toast("Auto Login","Connected to Warp",icon_path=icon_path,duration=5)
         else:
             status = 0
             if log_level == 1:
                 print(f"Connection timed out. Retrying {retry}/5")
-                logtext += f"Connection timed out. Retrying {retry}/5"
+                logtext += f"Connection timed out. Retrying {retry}/5\n"
             else : pass
             retry += 1
             n += 2
@@ -227,16 +227,17 @@ def main(argv):
             return 0
     driverSetup()
     while True:
+        logfile = open(f"{userdirectory}\\Code\\auto-login\\logfile.txt","a")
         try:
             if log_level == 1:
                 print("Loading user data.")
-                logtext += "Loading user data."
+                logtext += "Loading user data.\n"
             else: pass
             with open(f"{str(userdirectory)}\\AppData\\Roaming\\SOPHOS_auto_login\\log.dat",'r') as f:
                 userData = load(f)
             if log_level == 1:
                 print("Success")
-                logtext += "Success"
+                logtext += "Success\n"
         except Exception as e:
             userData = setup()
         try:            
@@ -245,7 +246,7 @@ def main(argv):
             if doLogin is True:
                 if log_level == 1:
                     print("Initiating Login\nSetting runtime options for webdriver.")
-                    logtext += "Initiating Login\nSetting runtime options for webdriver."
+                    logtext += "Initiating Login\nSetting runtime options for webdriver.\n"
                 else: pass
                 if browser == 0:
                     driver = webdriver.Chrome(options=run_options)
@@ -257,7 +258,7 @@ def main(argv):
                     return 1
                 if log_level == 1:
                     print("Finished setting runtime options for webdriver.\nConnecting to http://172.16.0.30:8090/httpclient.html")
-                    logtext += "Finished setting runtime options for webdriver.\nConnecting to http://172.16.0.30:8090/httpclient.html"
+                    logtext += "Finished setting runtime options for webdriver.\nConnecting to http://172.16.0.30:8090/httpclient.html\n"
                 driver.get('http://172.16.0.30:8090/httpclient.html')
                 uname = driver.find_element(By.ID, 'username')
                 passwd = driver.find_element(By.ID, 'password')
@@ -265,46 +266,47 @@ def main(argv):
                 uname.send_keys('f20212382')
                 if log_level == 1:
                     print("Populated username field.")
-                    logtext += "Populated username field."
+                    logtext += "Populated username field.\n"
                 passwd.send_keys('fd$21130617')
-                if log_level == 1:print("Populated password field.")
-                logtext += "Populated password field."
+                if log_level == 1:
+                    print("Populated password field.")
+                    logtext += "Populated password field.\n"
                 loginbutton.click()
                 if log_level == 1:
                     print("Clicked 'Sign In' button.")
-                    logtext += "Clicked 'Sign In' button."
+                    logtext += "Clicked 'Sign In' button.\n"
                 if(loginbutton.text == "Sign out"):
                     if log_level == 1:
                         print("Login successful")
-                        logtext += "Login successful"
+                        logtext += "Login successful\n"
                     else: pass
                     notifier.show_toast("Auto Login","Login Successful",icon_path=icon_path,duration=5)
                 else:
                     if log_level == 1:
                         print("Login failed")
-                        logtext += "Login failed"
+                        logtext += "Login failed\n"
                     else:pass
                     notifier.show_toast("Auto Login","Login Failed",icon_path=icon_path,duration=5)
                     driver.close()
                     return 1
                 if log_level == 1:
                     print("Retrieving current date and time.")
-                    logtext += "Retrieving current date and time."
+                    logtext += "Retrieving current date and time.\n"
                 time = datetime.time(datetime.now())
                 if log_level == 1:
                     print("Updating current time into last login time in user data.")
-                    logtext += "Updating current time into last login time in user data."
+                    logtext += "Updating current time into last login time in user data.\n"
                 userData["time"] = timedelta(hours=time.hour, minutes=time.minute)
                 if log_level == 1:
                     print("Writing user data into file.")
-                    logtext += "Writing user data into file."
+                    logtext += "Writing user data into file.\n"
                 with open(f"{str(userdirectory)}\\AppData\\Roaming\\SOPHOS_auto_login\\log.dat",'w') as f:
                     dump(userData,f,default=str)
                     
                 try:
                     if log_level == 1:
                         print("Terminating browser instance.")
-                        logtext += "Terminating browser instance."
+                        logtext += "Terminating browser instance.\n"
                     driver.close()
                     driver.close()
                 except Exception:
@@ -312,8 +314,10 @@ def main(argv):
                 WarpReconnect()
                 if log_level == 1:
                     print("\nPausing execution for 43200 seconds\n")
-                    logtext += "\nPausing execution for 43200 seconds\n"
+                    logtext += "\n\nPausing execution for 43200 seconds\n\n"
+                    logfile.write(f"\n------------------------------------\n\n{datetime.now()}\n\n------------------------------------\n")
                     logfile.write(logtext)
+                    logfile.close()
                 else: pass
                 sleep(43200)
                 
@@ -329,15 +333,19 @@ def main(argv):
                 if timeDifference.total_seconds()<0:
                     if log_level == 1:
                         print("\nPausing execution for 43200 seconds\n")
-                        logtext += "\nPausing execution for 43200 seconds\n"
+                        logtext += "\n\nPausing execution for 43200 seconds\n\n"
+                        logfile.write(f"\n------------------------------------\n\n{datetime.now()}\n\n------------------------------------\n")
                         logfile.write(logtext)
+                        logfile.close()
                     else : pass
                     sleep(43200)
                 else:
                     if log_level == 1:
                         print(f"\nPausing execution for {timeDifference.total_seconds()} seconds\n")
-                        logtext +=f"\nPausing execution for {timeDifference.total_seconds()} seconds\n"
+                        logtext +=f"\n\nPausing execution for {timeDifference.total_seconds()} seconds\n\n"
+                        logfile.write(f"\n------------------------------------\n\n{datetime.now()}\n\n------------------------------------\n")
                         logfile.write(logtext)
+                        logfile.close()
                     else:pass
                     sleep(timeDifference.total_seconds())
                 continue
